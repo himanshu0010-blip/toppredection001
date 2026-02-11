@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TOP PREDICTOR</title>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+    textarea, input { width: 100%; padding: 10px; margin: 5px 0; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; margin-top: 10px; cursor: pointer; }
+    #result { margin-top: 20px; font-size: 16px; }
+    .hack { color: green; font-weight: bold; font-size: 22px; margin-top:10px; }
+
+    .box-container { display:flex; gap:20px; margin-top:20px; }
+    .box { flex:1; background:#fff; padding:10px; border-radius:6px; }
+    .big { border:2px solid #ff5722; }
+    .small { border:2px solid #2196f3; }
+
+    table { border-collapse: collapse; width:100%; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:center; }
+    th { background:#eee; }
+</style>
+</head>
+
+<body>
+
+<h2>TOP PREDICTOR</h2>
+
+<!-- Yaha link add kiya -->
+<p><a href="page.html" target="_blank">👉 Dusra Page Kholo</a></p>
+
+<p>Number list paste kare:</p>
+<textarea id="numberList" rows="5"></textarea>
+
+<p>Search numbers (comma separated):</p>
+<input id="searchNumbers">
+
+<button onclick="checkHack()">Check Hack</button>
+
+<div id="result"></div>
+
+<div class="box-container">
+    <div class="box big">
+        <h3>BIG MATCHES</h3>
+        <table id="bigTable">
+            <tr>
+                <th>Prev</th>
+                <th>Match</th>
+                <th>Next</th>
+            </tr>
+        </table>
+    </div>
+
+    <div class="box small">
+        <h3>SMALL MATCHES</h3>
+        <table id="smallTable">
+            <tr>
+                <th>Prev</th>
+                <th>Match</th>
+                <th>Next</th>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script>
+function getPeriodNumber() {
+    let now = new Date();
+    let base = new Date();
+    base.setHours(18,0,0,0);
+    return 751 + Math.floor((now - base) / 60000);
+}
+
+function checkHack() {
+    let list = document.getElementById("numberList").value.trim();
+    let search = document.getElementById("searchNumbers").value
+        .split(",").map(n => n.trim());
+
+    let records = [];
+
+    search.forEach(s => {
+        let len = s.length;
+        for (let i = 1; i <= list.length - len - 1; i++) {
+            if (list.substr(i, len) === s) {
+                let next = list[i + len];
+                let prev = list[i - 1];
+
+                if (next >= '0' && next <= '9') {
+                    let side = next <= '4' ? "SMALL" : "BIG";
+                    let color = "";
+
+                    if (side === "SMALL") {
+                        color = ['1','3'].includes(next) ? "GREEN" : "RED";
+                    } else {
+                        color = ['5','7','9'].includes(next) ? "GREEN" : "RED";
+                    }
+
+                    records.push({
+                        match: s,
+                        prev: prev,
+                        next: next,
+                        side: side,
+                        color: color
+                    });
+                }
+            }
+        }
+    });
+
+    if (records.length === 0) {
+        document.getElementById("result").innerHTML = "❌ No match found";
+        return;
+    }
+
+    // Clear tables
+    document.getElementById("bigTable").innerHTML =
+        "<tr><th>Prev</th><th>Match</th><th>Next</th></tr>";
+    document.getElementById("smallTable").innerHTML =
+        "<tr><th>Prev</th><th>Match</th><th>Next</th></tr>";
+
+    records.forEach(r => {
+        let row = `
+            <tr>
+                <td>${r.prev}</td>
+                <td>${r.match}</td>
+                <td><b>${r.next}</b></td>
+            </tr>`;
+
+        if (r.side === "BIG") {
+            document.getElementById("bigTable").innerHTML += row;
+        } else {
+            document.getElementById("smallTable").innerHTML += row;
+        }
+    });
+
+    // Prediction logic
+    let big = records.filter(r => r.side === "BIG");
+    let small = records.filter(r => r.side === "SMALL");
+    let finalSide = small.length > big.length ? "SMALL" : "BIG";
+    let sideData = finalSide === "SMALL" ? small : big;
+
+    let green = sideData.filter(r => r.color === "GREEN");
+    let red = sideData.filter(r => r.color === "RED");
+    let finalColor = green.length >= red.length ? "GREEN" : "RED";
+
+    let priority = [];
+    if (finalSide === "BIG" && finalColor === "GREEN") priority = ['7','9','5'];
+    if (finalSide === "BIG" && finalColor === "RED") priority = ['8','6'];
+    if (finalSide === "SMALL" && finalColor === "GREEN") priority = ['3','1'];
+    if (finalSide === "SMALL" && finalColor === "RED") priority = ['4','2','0'];
+
+    let now = new Date();
+    let time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    document.getElementById("result").innerHTML = `
+        ⏰ ${time} | Period ${getPeriodNumber()}<br>
+        Final Side: <b>${finalSide}</b><br>
+        Final Color: <b>${finalColor}</b>
+        <div class="hack">🔥 HACK NUMBER: ${priority[0]}</div>
+    `;
+}
+</script>
+
+</body>
+</html>
